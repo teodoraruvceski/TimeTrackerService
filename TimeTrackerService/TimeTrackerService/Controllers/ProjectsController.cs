@@ -22,9 +22,9 @@ namespace TimeTrackerService.Controllers
             if (projects.Count == 0)
             {
                 Project Project = new Project("Project1");
-
-                projects = new List<Project> {Project };
+                projects = new List<Project> { Project };
                 projects.ForEach(x => _projectsService.AddTask(x));
+
                 return Ok(await _projectsService.GetAllProjects());
             }
             return Ok(projects);

@@ -25,7 +25,6 @@ namespace TaskTrackerTest
                 Duration = null,
             };
 
-            // Mock the Update method of the repository to return the input task
             taskRepositoryMock.Setup(repo => repo.Update(inputTask))
                 .Returns(new Task(1, "Test Task", "project"));
 
@@ -52,7 +51,6 @@ namespace TaskTrackerTest
             var createdTask = inputTask;
             createdTask.Name = "Task123";
             createdTask.Id = 123;
-            // Mock the Create and Update methods of the repository
             taskRepositoryMock.Setup(repo => repo.Create(It.IsAny<Task>()))
                 .Returns(createdTask);
 

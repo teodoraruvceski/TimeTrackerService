@@ -10,10 +10,8 @@ namespace TimeTrackerService.Db
         {
         }
 
-        // DbSet properties represent database tables
         public DbSet<Task> Tasks { get; set; }
         public DbSet<Project> Projects{ get; set; }
-        // Add DbSet properties for other entities as needed
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

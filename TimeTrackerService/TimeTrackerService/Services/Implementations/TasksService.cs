@@ -22,11 +22,10 @@ namespace TimeTrackerService.Services.Implementations
         {
             if(task.StartTime != null && task.EndTime != null)
             {
-                var startTime2 = new DateTime(task.StartTime.Value.Year, task.StartTime.Value.Month, task.StartTime.Value.Day, task.StartTime.Value.Hour + 2, task.StartTime.Value.Minute, task.StartTime.Value.Second);
-                var endTime2 = new DateTime(task.EndTime.Value.Year, task.EndTime.Value.Month, task.EndTime.Value.Day, task.EndTime.Value.Hour + 2, task.EndTime.Value.Minute, task.EndTime.Value.Second);
-                task.StartTime = startTime2;
-                task.EndTime = endTime2;
+                task.StartTime = new DateTime(task.StartTime.Value.Year, task.StartTime.Value.Month, task.StartTime.Value.Day, task.StartTime.Value.Hour + 2, task.StartTime.Value.Minute, task.StartTime.Value.Second); ;
+                task.EndTime = new DateTime(task.EndTime.Value.Year, task.EndTime.Value.Month, task.EndTime.Value.Day, task.EndTime.Value.Hour + 2, task.EndTime.Value.Minute, task.EndTime.Value.Second);
             }
+
             if (task.Name != "undefined")
                return  _repository.Update(task);
 
@@ -52,20 +51,20 @@ namespace TimeTrackerService.Services.Implementations
             FileStream fs = new FileStream($"Reports/ReportTime_{DateTime.Now.ToString("yyyyMMdd_HHmmss")}.pdf", FileMode.Create);
             var writer = PdfWriter.GetInstance(doc, fs);
             
-                writer.Open();
-                doc.Open();
+            writer.Open();
+            doc.Open();
 
-                Paragraph title = new Paragraph("Task Report", new Font(Font.FontFamily.HELVETICA, 24, Font.BOLD));
-                title.Alignment = Element.ALIGN_CENTER;
-                doc.Add(title);
+            Paragraph title = new Paragraph("Task Report", new Font(Font.FontFamily.HELVETICA, 24, Font.BOLD));
+            title.Alignment = Element.ALIGN_CENTER;
+            doc.Add(title);
 
-                PdfPTable toDoTable = new PdfPTable(4);
-                PdfPTable finishedTable = new PdfPTable(4);
+            PdfPTable toDoTable = new PdfPTable(4);
+            PdfPTable finishedTable = new PdfPTable(4);
 
-                // Define column widths
-                float[] columnWidths = new float[] { 2f, 2f, 2f, 1f };
-                toDoTable.SetWidths(columnWidths);
-                finishedTable.SetWidths(columnWidths);
+            // Define column widths
+            float[] columnWidths = new float[] { 2f, 2f, 2f, 1f };
+            toDoTable.SetWidths(columnWidths);
+            finishedTable.SetWidths(columnWidths);
 
             //Add headers to both tables
             AddCell(toDoTable, "Task", true);
@@ -83,70 +82,53 @@ namespace TimeTrackerService.Services.Implementations
                     .GroupBy(task => task.StartTime.Value.Date)
                     .OrderBy(group => group.Key);
 
-                doc.Add(new Paragraph("Finished Tasks:"));
+            doc.Add(new Paragraph("Finished Tasks:"));
+            doc.Add(new Paragraph(" "));
+            foreach (var group in finishedTasksByDate)
+            {
                 doc.Add(new Paragraph(" "));
-                foreach (var group in finishedTasksByDate)
+                doc.Add(new Paragraph($"Date: {group.Key.ToShortDateString()}"));
+                doc.Add(new Paragraph(" "));
+
+                PdfPTable finishedTableForDate = new PdfPTable(4);
+                finishedTableForDate.SetWidths(columnWidths);
+                AddCell(finishedTableForDate, "Task", true);
+                AddCell(finishedTableForDate, "Project", true);
+                AddCell(finishedTableForDate, "Start Time", true);
+                AddCell(finishedTableForDate, "Duration", true);
+
+                    foreach (var task in group)
                 {
-                    // Add a section header with the date
-                    doc.Add(new Paragraph(" "));
-                    doc.Add(new Paragraph($"Date: {group.Key.ToShortDateString()}"));
-                    doc.Add(new Paragraph(" "));
-
-                    // Create a new table for this date's tasks
-                    PdfPTable finishedTableForDate = new PdfPTable(4);
-                    finishedTableForDate.SetWidths(columnWidths);
-                    AddCell(finishedTableForDate, "Task", true);
-                    AddCell(finishedTableForDate, "Project", true);
-                    AddCell(finishedTableForDate, "Start Time", true);
-                    AddCell(finishedTableForDate, "Duration", true);
-
-                // Add tasks for this date to the table
-                foreach (var task in group)
-                    {
-                        AddCell(finishedTableForDate, task.Name);
-                        AddCell(finishedTableForDate, task.ProjectName);
-                        AddCell(finishedTableForDate, $"{task.StartTime.Value.ToString("hh:mm tt", CultureInfo.InvariantCulture)} - { task.EndTime?.ToString("hh:mm tt" , CultureInfo.InvariantCulture)}");
-                        AddCell(finishedTableForDate, $"{(int)(task.Duration / 3600):00}:{(int)((task.Duration % 3600) / 60):00}");
-                    }
-
-                    // Add the table for this date to the document
-                    doc.Add(finishedTableForDate);
+                    AddCell(finishedTableForDate, task.Name);
+                    AddCell(finishedTableForDate, task.ProjectName);
+                    AddCell(finishedTableForDate, $"{task.StartTime.Value.ToString("hh:mm tt", CultureInfo.InvariantCulture)} - { task.EndTime?.ToString("hh:mm tt" , CultureInfo.InvariantCulture)}");
+                    AddCell(finishedTableForDate, $"{(int)(task.Duration / 3600):00}:{(int)((task.Duration % 3600) / 60):00}");
                 }
 
-                // Add tasks to "To Do" section
-                foreach (var task in tasks)
+                doc.Add(finishedTableForDate);
+            }
+
+            foreach (var task in tasks)
+            {
+                if (task.StartTime == null)
                 {
-                    if (task.StartTime == null)
-                    {
-                        // To Do task
-                        AddCell(toDoTable, task.Name);
-                        AddCell(toDoTable, task.ProjectName);
-                        AddCell(toDoTable, " ");
-                        AddCell(toDoTable, " ");
-                    }
+                    AddCell(toDoTable, task.Name);
+                    AddCell(toDoTable, task.ProjectName);
+                    AddCell(toDoTable, " ");
+                    AddCell(toDoTable, " ");
                 }
-                doc.Add(new Paragraph(" "));
-                doc.Add(new Paragraph("To Do Tasks:"));
-                doc.Add(new Paragraph(" "));
-                doc.Add(toDoTable);
-                doc.Close();
-                writer.Close();
+            }
+            doc.Add(new Paragraph(" "));
+            doc.Add(new Paragraph("To Do Tasks:"));
+            doc.Add(new Paragraph(" "));
+            doc.Add(toDoTable);
+            doc.Close();
+            writer.Close();
         }
 
         public async Task<List<Task>> GetAllTasks()
         {
             return _repository.Get();
-        }
-
-        public async Task<Task> StartTask(int id)
-        {
-            Task task = _repository.Get(id);
-            if(task != null)
-            {
-                task.StartTime = DateTime.Now;
-                return _repository.Update(task);
-            }
-            return task;
         }
 
     }

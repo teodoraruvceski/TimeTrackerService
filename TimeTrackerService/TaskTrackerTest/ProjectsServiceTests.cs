@@ -44,15 +44,12 @@ namespace TaskTrackerTest
             var projectRepositoryMock = new Mock<IRepository<Project>>();
             var projectsService = new ProjectsService(projectRepositoryMock.Object);
 
-            // Create a list of projects to be returned by the mock repository
             var expectedProjects = new List<Project>
             {
                 new Project { Id = 1, Name = "Project 1" },
                 new Project { Id = 2, Name = "Project 2" },
-                // Add more projects as needed
             };
 
-            // Mock the Get method of the repository to return the expected projects
             projectRepositoryMock.Setup(repo => repo.Get()).Returns(expectedProjects);
 
             // Act
@@ -61,7 +58,6 @@ namespace TaskTrackerTest
             // Assert
             Assert.NotNull(actualProjects);
             Assert.Equal(expectedProjects.Count, actualProjects.Count);
-            // You can add more specific assertions based on your requirements
         }
     }
 }
